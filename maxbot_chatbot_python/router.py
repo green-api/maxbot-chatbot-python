@@ -1,7 +1,3 @@
-import structlog
-
-log = structlog.get_logger(__name__)
-
 class Router:
     def __init__(self):
         self.handlers = {}
@@ -43,7 +39,7 @@ class Router:
         Example:
             @router.register("message_created")
             async def on_message(notification):
-                log.info("Process message")
+                print("Process message")
         """
         def decorator(func):
             if update_type not in self.handlers:
@@ -64,44 +60,45 @@ class Router:
         except ValueError:
             chat_id, sender_id = 0, 0
 
-        if u_type == "message_created":
-            try:
-                text = notification.text()
-                if text and text.startswith("/"):
-                    cmd = text.split(" ", 1)[0]
-                    log.info("Received new command", chat_id=chat_id, user_id=sender_id, command=cmd)
-                    if cmd in self.commands:
-                        await self.commands[cmd](notification)
-                        return
-                else:
-                    log.info("Received new message", chat_id=chat_id, user_id=sender_id, text=text)
-            except Exception:
-                pass
+        match u_type:
+            case "message_created":
+                try:
+                    text = notification.text()
+                    if text and text.startswith("/"):
+                        cmd = text.split(" ", 1)[0]
+                        print(f"Received new command | chat_id: {chat_id}, user_id: {sender_id}, command: {cmd}")
+                        if cmd in self.commands:
+                            await self.commands[cmd](notification)
+                            return
+                    else:
+                        print(f"Received new message | chat_id: {chat_id}, user_id: {sender_id}, text: {text}")
+                except Exception:
+                    pass
 
-        elif u_type == "message_callback":
-            try:
-                payload = notification.text()
-                log.info("Received new callback", chat_id=chat_id, user_id=sender_id, callback=payload)
-                if payload in self.callbacks:
-                    await self.callbacks[payload](notification)
-                    return
-            except Exception:
-                pass
+            case "message_callback":
+                try:
+                    payload = notification.text()
+                    print(f"Received new callback | chat_id: {chat_id}, user_id: {sender_id}, callback: {payload}")
+                    if payload in self.callbacks:
+                        await self.callbacks[payload](notification)
+                        return
+                except Exception:
+                    pass
         
-        elif u_type in ("bot_added", "bot_started", "bot_stopped"):
-            log.info("Bot status updated", type=u_type, chat_id=chat_id)
-            
-        elif u_type in ("user_added", "user_removed"):
-            log.info("User membership changed", type=u_type, chat_id=chat_id)
-            
-        elif u_type in ("dialog_muted", "dialog_unmuted", "dialog_cleared", "dialog_removed"):
-            log.info("Dialog state updated", type=u_type, chat_id=chat_id)
-            
-        elif u_type in ("message_edited", "message_removed"):
-            log.info("Message modified", type=u_type, chat_id=chat_id)
-            
-        elif u_type == "chat_title_changed":
-            log.info("Chat settings modified", type=u_type, chat_id=chat_id)
+            case "bot_added" | "bot_started" | "bot_stopped":
+                print(f"Bot status updated | type: {u_type}, chat_id: {chat_id}")
+                
+            case "user_added" | "user_removed":
+                print(f"User membership changed | type: {u_type}, chat_id: {chat_id}")
+                
+            case "dialog_muted" | "dialog_unmuted" | "dialog_cleared" | "dialog_removed":
+                print(f"Dialog state updated | type: {u_type}, chat_id: {chat_id}")
+                
+            case "message_edited" | "message_removed":
+                print(f"Message modified | type: {u_type}, chat_id: {chat_id}")
+                
+            case "chat_title_changed":
+                print(f"Chat settings modified | type: {u_type}, chat_id: {chat_id}")
 
         if u_type in self.handlers:
             for func in self.handlers[u_type]:

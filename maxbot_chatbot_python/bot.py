@@ -1,9 +1,7 @@
-import asyncio, structlog
-from .router import Router
-from .notification import Notification
+import asyncio
+from maxbot_chatbot_python.router import Router
+from maxbot_chatbot_python.notification import Notification
 from maxbot_api_client_python.types.models import GetUpdatesReq
-
-log = structlog.get_logger(__name__)
 
 class Bot:
     def __init__(self, api_client):
@@ -13,7 +11,7 @@ class Bot:
         self.marker = 0
 
     async def start_polling(self):
-        log.info("Bot is running. Start polling...")
+        print("Bot is running. Start polling...")
 
         while True:
             try:
@@ -30,10 +28,10 @@ class Bot:
                     asyncio.create_task(self.process_update(update))
 
             except asyncio.CancelledError:
-                log.info("Stop polling...")
+                print("Stop polling...")
                 break
             except Exception as e:
-                log.error("Error receiving updates", error=str(e))
+                print("Error receiving updates:", str(e))
                 await asyncio.sleep(2)
 
     async def process_update(self, update):

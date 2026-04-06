@@ -1,7 +1,7 @@
-from .bot import Bot
-from .state import MapStateManager, Scene, State
-from .notification import Notification
-from .router import Router
+from maxbot_chatbot_python.bot import Bot
+from maxbot_chatbot_python.state import MapStateManager, Scene, State
+from maxbot_chatbot_python.notification import Notification
+from maxbot_chatbot_python.router import Router
 
 __all__ = [
     "Bot", 

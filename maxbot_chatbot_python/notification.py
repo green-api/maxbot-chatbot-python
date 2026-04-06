@@ -1,11 +1,8 @@
-import structlog, asyncio
+import asyncio
 from typing import List, Optional
 
 from maxbot_api_client_python import utils
-from maxbot_api_client_python.types.models import *
-
-log = structlog.get_logger(__name__)
-
+from maxbot_api_client_python.types.models import AnswerCallbackReq, Attachment, KeyboardButton, SendActionReq, SendFileReq, SendMessageReq
 class Notification:
     def __init__(self, update, bot_api, state_manager=None):
         self.update = update
@@ -22,9 +19,9 @@ class Notification:
 
         try:
             await self.bot_api.messages.SendMessageAsync(req)
-            log.info(f"{log_prefix} reply sent", target_id=req.chat_id)
+            print(f"{log_prefix} reply sent to {req.chat_id}")
         except Exception as e:
-            log.error(f"Sending {log_prefix} reply error", error=str(e), target_id=req.chat_id)
+            print(f"Sending {log_prefix} reply error: {e}, target_id: {req.chat_id}")
             raise
 
     def type(self) -> str:
@@ -40,77 +37,51 @@ class Notification:
             return self.update.get('update_type')
         return "unknown"
 
-    def text(self) -> str:
-        """
-        Extracts the text content from a message or the payload from a callback.
+    @property
+    def _is_message(self) -> bool:
+        return self.type() in ("message_created", "message_edited") and self.update.message is not None
 
-        Example:
-            msg_text = notification.text()
-        """
-        u_type = self.type()
-        if u_type in ("message_created", "message_edited"):
-            if self.update.message and self.update.message.body:
-                return self.update.message.body.text
-        elif u_type == "message_callback":
-            if self.update.callback:
-                return self.update.callback.payload
-        raise ValueError(f"Text is not applicable or missing for type: {u_type}")
+    @property
+    def _is_callback(self) -> bool:
+        return self.type() == "message_callback" and self.update.callback is not None
+
+    def text(self) -> str:
+        if self._is_message and self.update.message.body:
+            return self.update.message.body.text
+        if self._is_callback:
+            return self.update.callback.payload
+        raise ValueError(f"Text is not applicable or missing for type: {self.type()}")
 
     def sender_name(self) -> str:
-        """
-        Returns the first name of the user who triggered the update.
-
-        Example:
-            name = notification.sender_name()
-        """
-        u_type = self.type()
-        if u_type in ("message_created", "message_edited"):
-            if self.update.message and self.update.message.sender:
-                return self.update.message.sender.first_name
-        elif u_type == "message_callback":
-            if self.update.callback and self.update.callback.user:
-                return self.update.callback.user.first_name
-        raise ValueError(f"Sender name not found for type: {u_type}")
+        if self._is_message and self.update.message.sender:
+            return self.update.message.sender.first_name
+        if self._is_callback and self.update.callback.user:
+            return self.update.callback.user.first_name
+        raise ValueError(f"Sender name not found for type: {self.type()}")
 
     def sender_id(self) -> int:
-        """
-        Returns the user ID of the person who sent the message or triggered the callback.
-
-        Example:
-            user_id = notification.sender_id()
-        """
-        u_type = self.type()
-        if u_type in ("message_created", "message_edited"):
-            if self.update.message and self.update.message.sender:
-                return self.update.message.sender.user_id
-        elif u_type == "message_callback":
-            if self.update.callback and self.update.callback.user:
-                return self.update.callback.user.user_id
-        raise ValueError(f"Sender ID not found for type: {u_type}")
+        if self._is_message and self.update.message.sender:
+            return self.update.message.sender.user_id
+        if self._is_callback and self.update.callback.user:
+            return self.update.callback.user.user_id
+        raise ValueError(f"Sender ID not found for type: {self.type()}")
 
     def chat_id(self) -> int:
-        """
-        Returns the ID of the chat where the event occurred.
-
-        Example:
-            chat_id = notification.chat_id()
-        """
-        u_type = self.type()
-        if u_type in ("message_created", "message_edited"):
-            if self.update.message:
-                chat_id = getattr(self.update.message.recipient, 'chat_id', 0) if self.update.message.recipient else 0
-                return chat_id if chat_id != 0 else getattr(self.update.message.sender, 'user_id', 0)
-        elif u_type == "message_callback":
+        if self._is_message:
+            chat_id = getattr(self.update.message.recipient, 'chat_id', 0) if self.update.message.recipient else 0
+            return chat_id if chat_id != 0 else getattr(self.update.message.sender, 'user_id', 0)
+            
+        if self._is_callback:
             if getattr(self.update, 'chat_id', 0):
                 return self.update.chat_id
             if getattr(self.update.callback, 'chat_id', 0):
                 return getattr(self.update.callback, 'chat_id')
-            if self.update.message and getattr(self.update.message.recipient, 'chat_id', 0):
+            if getattr(self.update, 'message', None) and getattr(self.update.message.recipient, 'chat_id', 0):
                 return self.update.message.recipient.chat_id
-            if self.update.callback and self.update.callback.user:
+            if self.update.callback.user:
                 return self.update.callback.user.user_id
                 
-        raise ValueError(f"Chat ID not found for type: {u_type}")
+        raise ValueError(f"Chat ID not found for type: {self.type()}")
 
     async def reply(self, text: str, format_type: Optional[str] = "markdown"):
         """
@@ -152,15 +123,15 @@ class Notification:
         for i in range(5):
             try:
                 await self.bot_api.helpers.SendFileAsync(req)
-                log.info("Media reply sent successfully", target_id=target_id)
+                print("Media reply sent successfully to {target_id}")
                 return
             except Exception as e:
                 err_str = str(e)
                 if "not.ready" in err_str or "not.found" in err_str:
-                    log.warning("File is processing", attempt=i+1, max_attempts=5)
+                    print("File is processing", attempt=i+1, max_attempts=5)
                     await asyncio.sleep(3)
                     continue
-                log.error("Sending media reply error", error=err_str, target_id=target_id)
+                print("Sending media reply error: {e}")
                 raise e
 
     async def reply_with_contact(self, name: str, phone: str, contact_id: Optional[int] = None):
@@ -255,7 +226,7 @@ class Notification:
         Example:
             await notification.answer_callback("Action confirmed!")
         """
-        if self.type() != "message_callback" or not self.update.callback:
+        if not self._is_callback:
             raise ValueError("cannot answer callback: update is not a callback")
 
         try:
@@ -264,7 +235,7 @@ class Notification:
             notification=text if text else " "
         ))
         except Exception as e:
-            log.error("AnswerCallback error", error=str(e))
+            print("AnswerCallback error: {e}")
             raise
 
     async def show_action(self, action: str):
@@ -285,12 +256,12 @@ class Notification:
             ))
             
             if res and not getattr(res, 'success', True):
-                log.warning("API rejected the action", action=action, reason=getattr(res, 'message', 'unknown error'))
+                print("API rejected the action {action}: {res}")
             else:
-                log.info("Action sent successfully", action=action, chat_id=chat_id)
+                print("Action {action} sent successfully to {chat_id}")
                 
         except Exception as e:
-            log.error("Failed to send action due to API error", action=action, error=str(e))
+            print("Failed to send action {action} due to API error {e}")
             raise
 
     def create_state_id(self):
