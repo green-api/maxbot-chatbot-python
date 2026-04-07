@@ -1,13 +1,17 @@
 # maxbot-chatbot-python
 
-`maxbot-chatbot-python` — это асинхронный фреймворк для создания масштабируемых ботов для MAX BOT API на языке Python. 
-Построенная на основе [`maxbot_api_client_python`](https://github.com/green-api/maxbot-api-client-python), эта библиотека предоставляет чистый маршрутизатор, автоматическое получение обновлений (Long Polling) и надежный менеджер состояний (FSM) для построения многошаговых диалоговых сценариев.
+`maxbot-chatbot-python` — это асинхронный фреймворк для создания масштабируемых ботов для **MAX BOT API** на языке **Python**.  
 
-Для использования библиотеки требуется получить токен бота в консоли разработчика MAX API.
+Построенная на основе [`maxbot_api_client_python`](https://github.com/green-api/maxbot-api-client-python), эта библиотека предоставляет чистый маршрутизатор, автоматическое получение обновлений (*Long Polling*) и надежный менеджер состояний (*FSM*) для построения многошаговых диалоговых сценариев.  
+
+Для использования библиотеки требуется получить токен бота в консоли разработчика **MAX API**.  
+Ознакомиться с инструкцией можно [по ссылке](https://green-api.com/max-bot-api/docs/before-start/). 
 
 ## API
 
-Документацию по REST API MAX можно найти по ссылке [https://dev.max.ru/docs-api](https://dev.max.ru/docs-api). Библиотека является оберткой для REST API, поэтому документация по указанной выше ссылке также применима к используемым здесь моделям.
+Документацию по **REST API MAX** можно найти по ссылке [dev.max.ru/docs-api](https://dev.max.ru/docs-api). Библиотека является оберткой для REST API, поэтому документация по указанной выше ссылке также применима к используемым здесь моделям.
+
+Документацию по **MAX BOT API** можно найти по ссылке [green-api.com/max-bot-api/docs](https://green-api.com/max-bot-api/docs/).
 
 ## Поддержка
 
@@ -23,15 +27,16 @@
 
 ## Установка
 
-**Убедитесь, что у вас установлен Python версии 3.9 или выше.**
+**Убедитесь, что у вас установлен Python версии 3.12 или выше.**
 
 ```bash
 python --version
 ```
 
 **Установите библиотеку:**
+
 ```bash
-pip install github.com/green-api/maxbot-chatbot-python
+pip install maxbot-chatbot-python
 ```
 
 ---
@@ -40,42 +45,45 @@ pip install github.com/green-api/maxbot-chatbot-python
 
 **Параметры конфигурации:** 
 
-- `base_url` - Базовый URL-адрес серверов платформы MaxBot. Все методы API будут маршрутизироваться по этому корневому адресу. Актуальный адрес указан в [официальной документации](https://dev.max.ru/docs-api).
-- `token` - Уникальный секретный ключ авторизации (API-ключ) вашего бота. Получить его можно в личном кабинете после [регистрации или создании бота](https://green-api.com/max-bot-api/docs/before-start/) на платформе [business.max.ru](https://business.max.ru/).
-- `ratelimiter` - Встроенный ограничитель частоты запросов. Он контролирует количество исходящих запросов в секунду (RPS), защищая бота от блокировки со стороны сервера за превышение лимитов. Рекомендуемое значение — не менее 25.
-- `timeout` - Максимальное время ожидания ответа от сервера (в секундах). Если сервер не ответит в течение этого времени, запрос будет завершен с ошибкой. Оптимальное значение — 30 секунд.
+- `base_url` - Базовый URL-адрес серверов платформы MaxBot. Все методы API будут маршрутизироваться по этому корневому адресу. Актуальный адрес указан в [официальной документации](https://dev.max.ru/docs-api).   
+- `token` - Уникальный секретный ключ авторизации (API-ключ) вашего бота. Получить его можно в личном кабинете после [регистрации или создании бота](https://green-api.com/max-bot-api/docs/before-start/) на платформе [business.max.ru](https://business.max.ru/).    
+- `ratelimiter` - Встроенный ограничитель частоты запросов. Он контролирует количество исходящих запросов в секунду (RPS), защищая бота от блокировки со стороны сервера за превышение лимитов. Рекомендуемое значение — не менее 25.   
+- `timeout` - Максимальное время ожидания ответа от сервера (в секундах). Если сервер не ответит в течение этого времени, запрос будет завершен с ошибкой. Оптимальное значение — 30 секунд.    
 
 ### Инициализация бота
 
+Использование асинхронного контекстного менеджера (`async with API(...)`) гарантирует безопасное закрытие сетевых соединений при остановке бота.
+
 ```python
-import asyncio, logging
+import asyncio
 
 from maxbot_api_client_python import API, Config
 from maxbot_chatbot_python import Bot, MapStateManager
 
 async def main():
-    api_client = API(cfg=Config(
-        base_url="https://platform-api.max.ru/", 
+    cfg = Config(
+        base_url="[https://platform-api.max.ru/](https://platform-api.max.ru/)", 
         token="YOUR_MAXBOT_TOKEN", 
         ratelimiter=25,
         timeout=35
-    ))
+    )
 
-    bot = Bot(api_client)
-    bot.state_manager = MapStateManager(init_data={})
+    async with API(cfg) as api_client:
+        bot = Bot(api_client)
+        bot.state_manager = MapStateManager(init_data={})
 
-    polling_task = asyncio.create_task(bot.start_polling())
+        polling_task = asyncio.create_task(bot.start_polling())
 
-    try:
-        await polling_task
-    except asyncio.CancelledError:
-        pass
+        try:
+            await polling_task
+        except asyncio.CancelledError:
+            pass
 
 if __name__ == "__main__":
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        logging.info("Bot stopped by user")
+        print("Bot stopped by user")
 ```
 
 ### Маршрутизация команд, сообщений и коллбэков
@@ -142,10 +150,6 @@ class PasswordScene(Scene):
 
         notification.activate_next_scene(RegistrationScene())
 
-
-bot.state_manager = MapStateManager(init_data={"step": "start"})
-bot.state_manager.set_start_scene(RegistrationScene())
-
 @bot.router.register("message_created")
 async def fsm_handler(notification):
     current_scene = notification.get_current_scene()
@@ -160,12 +164,12 @@ async def fsm_handler(notification):
 ```python
 @bot.router.command("/photo")
 async def send_photo(notification):
-    await notification.show_action("upload_photo")
+    await notification.show_action("sending_photo")
 
     await notification.reply_with_media(
         text="Check out this image!", 
         format_type="markdown", 
-        file_source="[https://example.com/image.png](https://example.com/image.png)"
+        file_source="[https://http.cat/200.jpg](https://http.cat/200.jpg)"
     )
 ```
 
@@ -178,35 +182,35 @@ from maxbot_api_client_python import API, Config
 from maxbot_chatbot_python import Bot, MapStateManager
 
 async def main():
-    api_client = API(cfg = Config(
-        base_url="https://platform-api.max.ru/", 
+    cfg = Config(
+        base_url="[https://platform-api.max.ru/](https://platform-api.max.ru/)", 
         token="YOUR_MAXBOT_TOKEN",
         ratelimiter=25
-    ))
+    )
 
-    bot = Bot(api_client)
-    bot.state_manager = MapStateManager(init_data={})
+    async with API(cfg) as api_client:
+        bot = Bot(api_client)
+        bot.state_manager = MapStateManager(init_data={})
 
-    @bot.router.register("message_created")
-    async def echo_handler(notification):
+        @bot.router.register("message_created")
+        async def echo_handler(notification):
+            try:
+                text = notification.text()
+                await notification.reply(f"**Echo:** {text}", "markdown")
+            except Exception as e:
+                print(f"Error handling message: {e}")
+
+        polling_task = asyncio.create_task(bot.start_polling())
+
         try:
-            text = notification.text()
-            await notification.reply(f"**Echo:** {text}", "markdown")
-        except Exception as e:
-            print(f"Error receiving updates:", str(e))
-
-    polling_task = asyncio.create_task(bot.start_polling())
-
-    try:
-        await polling_task
-    except asyncio.CancelledError:
-        pass
+            await polling_task
+        except asyncio.CancelledError:
+            pass
 
 if __name__ == "__main__":
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
         print("Bot stopped by user (KeyboardInterrupt)")
-
-
+```
 ```
