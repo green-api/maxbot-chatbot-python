@@ -13,7 +13,7 @@ class Notification:
         self.state_id = "global"
         self.create_state_id()
 
-    async def send(self, log_prefix: str, **kwargs):
+    async def send(self, **kwargs):
         """
         Internal method to send a constructed message request to the chat and log it.
         """
@@ -22,9 +22,9 @@ class Notification:
 
         try:
             await self.bot_api.messages.SendMessageAsync(**kwargs)
-            logger.info(f"{log_prefix} reply sent to {kwargs['chat_id']}")
+            logger.info(f"Reply sent to {kwargs['chat_id']}")
         except Exception as e:
-            logger.error(f"Sending {log_prefix} reply error: {e}, target_id: {kwargs['chat_id']}")
+            logger.error(f"Sending reply error: {e}, target_id: {kwargs['chat_id']}")
             raise
 
     def type(self) -> str:
@@ -83,7 +83,6 @@ class Notification:
 
     async def reply(self, text: str, format_type: str | None = "markdown"):
         await self.send(
-            "Text",
             chat_id=0,
             text=text,
             format=format_type if format_type else None,
@@ -119,7 +118,6 @@ class Notification:
 
     async def reply_with_contact(self, name: str, phone: str, contact_id: int | None = None):
         await self.send(
-            "Contact",
             chat_id=0,
             attachments=[utils.attach_contact(name, phone, contact_id)],
             notify=True
@@ -127,7 +125,6 @@ class Notification:
 
     async def reply_with_location(self, lat: float, lon: float):
         await self.send(
-            "Location",
             chat_id=0,
             attachments=[utils.attach_location(lat, lon)],
             notify=True
@@ -135,7 +132,6 @@ class Notification:
 
     async def reply_with_keyboard(self, text: str, format_type: str | None, buttons: list[list[KeyboardButton]]):
         await self.send(
-            "Keyboard",
             chat_id=0,
             text=text,
             format=format_type if format_type else None,
@@ -145,7 +141,6 @@ class Notification:
 
     async def reply_with_sticker(self, url: str, code: str):
         await self.send(
-            "Sticker",
             chat_id=0,
             attachments=[utils.attach_sticker(url, code)],
             notify=True
@@ -153,7 +148,6 @@ class Notification:
 
     async def reply_with_share(self, text: str, url: str, title: str, desc: str):
         await self.send(
-            "Share",
             chat_id=0,
             text=text,
             attachments=[utils.attach_share(url, title, desc)],
@@ -162,7 +156,6 @@ class Notification:
 
     async def reply_with_attachments(self, text: str, format_type: str | None, attachments: list[Attachment]):
         await self.send(
-            "Attachments",
             chat_id=0,
             text=text,
             format=format_type if format_type else None,

@@ -16,5 +16,5 @@ setup(
         "httpx>=0.24.0",
         "pydantic>=2.0.0"
     ],
-    python_requires=">=3.8",
+    python_requires=">=3.12",
 )

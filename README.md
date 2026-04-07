@@ -62,8 +62,8 @@ from maxbot_chatbot_python import Bot, MapStateManager
 
 async def main():
     cfg = Config(
-        base_url="[https://platform-api.max.ru/](https://platform-api.max.ru/)", 
-        token="YOUR_MAXBOT_TOKEN", 
+        base_url="https://platform-api.max.ru/", 
+        token="YOUR_BOT_TOKEN", 
         ratelimiter=25,
         timeout=35
     )
@@ -169,7 +169,7 @@ async def send_photo(notification):
     await notification.reply_with_media(
         text="Check out this image!", 
         format_type="markdown", 
-        file_source="[https://http.cat/200.jpg](https://http.cat/200.jpg)"
+        file_source="https://storage.yandexcloud.net/sw-prod-03-test/ChatBot/corgi.jpg"
     )
 ```
 
@@ -183,8 +183,8 @@ from maxbot_chatbot_python import Bot, MapStateManager
 
 async def main():
     cfg = Config(
-        base_url="[https://platform-api.max.ru/](https://platform-api.max.ru/)", 
-        token="YOUR_MAXBOT_TOKEN",
+        base_url="https://platform-api.max.ru/", 
+        token="YOUR_BOT_TOKEN",
         ratelimiter=25
     )
 
