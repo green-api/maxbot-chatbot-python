@@ -12,7 +12,7 @@ setup(
     url="https://github.com/green-api/maxbot-chatbot-python",
     packages=find_packages(exclude=["examples*"]), 
     install_requires=[
-        "maxbot-api-client-python>=1.1.0",
+        "maxbot-api-client-python>=1.1.2",
         "httpx>=0.24.0",
         "pydantic>=2.0.0"
     ],
