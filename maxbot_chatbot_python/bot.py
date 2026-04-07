@@ -1,7 +1,6 @@
 import asyncio
 from maxbot_chatbot_python.router import Router
 from maxbot_chatbot_python.notification import Notification
-from maxbot_api_client_python.types.models import GetUpdatesReq
 
 class Bot:
     def __init__(self, api_client):
@@ -15,10 +14,10 @@ class Bot:
 
         while True:
             try:
-                resp = await self.api.subscriptions.GetUpdatesAsync(GetUpdatesReq(
+                resp = await self.api.subscriptions.GetUpdatesAsync(
                     marker=self.marker,
                     timeout=25
-                ))
+                )
 
                 if getattr(resp, 'marker', 0) != 0:
                     self.marker = resp.marker
@@ -31,7 +30,7 @@ class Bot:
                 print("Stop polling...")
                 break
             except Exception as e:
-                print(f"Error receiving updates:", str(e))
+                print(f"Error receiving updates: {e}")
                 await asyncio.sleep(2)
 
     async def process_update(self, update):
