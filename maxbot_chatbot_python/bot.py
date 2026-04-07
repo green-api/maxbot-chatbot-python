@@ -31,7 +31,7 @@ class Bot:
                 print("Stop polling...")
                 break
             except Exception as e:
-                print("Error receiving updates:", str(e))
+                print(f"Error receiving updates:", str(e))
                 await asyncio.sleep(2)
 
     async def process_update(self, update):

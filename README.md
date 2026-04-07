@@ -180,7 +180,8 @@ from maxbot_chatbot_python import Bot, MapStateManager
 async def main():
     api_client = API(cfg = Config(
         base_url="https://platform-api.max.ru/", 
-        token="YOUR_MAXBOT_TOKEN"
+        token="YOUR_MAXBOT_TOKEN",
+        ratelimiter=25
     ))
 
     bot = Bot(api_client)
@@ -192,7 +193,7 @@ async def main():
             text = notification.text()
             await notification.reply(f"**Echo:** {text}", "markdown")
         except Exception as e:
-            log.error(f"Echo error: {e}")
+            print(f"Error receiving updates:", str(e))
 
     polling_task = asyncio.create_task(bot.start_polling())
 
@@ -205,6 +206,7 @@ if __name__ == "__main__":
     try:
         asyncio.run(main())
     except KeyboardInterrupt:
-        log.info("Bot stopped by user (KeyboardInterrupt)")
+        print("Bot stopped by user (KeyboardInterrupt)")
+
 
 ```

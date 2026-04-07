@@ -123,15 +123,15 @@ class Notification:
         for i in range(5):
             try:
                 await self.bot_api.helpers.SendFileAsync(req)
-                print("Media reply sent successfully to {target_id}")
+                print(f"Media reply sent successfully to {target_id}")
                 return
             except Exception as e:
                 err_str = str(e)
                 if "not.ready" in err_str or "not.found" in err_str:
-                    print("File is processing", attempt=i+1, max_attempts=5)
+                    print(f"File is processing, attempt {i+1}/5")
                     await asyncio.sleep(3)
                     continue
-                print("Sending media reply error: {e}")
+                print(f"Sending media reply error: {e}")
                 raise e
 
     async def reply_with_contact(self, name: str, phone: str, contact_id: Optional[int] = None):
@@ -235,7 +235,7 @@ class Notification:
             notification=text if text else " "
         ))
         except Exception as e:
-            print("AnswerCallback error: {e}")
+            print(f"AnswerCallback error: {e}")
             raise
 
     async def show_action(self, action: str):
@@ -256,12 +256,12 @@ class Notification:
             ))
             
             if res and not getattr(res, 'success', True):
-                print("API rejected the action {action}: {res}")
+                print(f"API rejected the action {action}: {res}")
             else:
-                print("Action {action} sent successfully to {chat_id}")
+                print(f"Action {action} sent successfully to {chat_id}")
                 
         except Exception as e:
-            print("Failed to send action {action} due to API error {e}")
+            print(f"Failed to send action {action} due to API error {e}")
             raise
 
     def create_state_id(self):

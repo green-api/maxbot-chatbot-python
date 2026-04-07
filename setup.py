@@ -7,7 +7,7 @@ setup(
     author="Green-API",
     packages=find_packages(exclude=["examples*"]), 
     install_requires=[
-        "maxbot-api-client-python"
+        "maxbot-api-client-python",
         "httpx",
         "pydantic"
     ],

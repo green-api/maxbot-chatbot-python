@@ -20,7 +20,7 @@ async def main():
             text = notification.text()
             await notification.reply(f"**Echo:** {text}", "markdown")
         except Exception as e:
-            print("Error receiving updates:", str(e))
+            print(f"Error receiving updates:", str(e))
 
     polling_task = asyncio.create_task(bot.start_polling())
 
