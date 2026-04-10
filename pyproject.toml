@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "maxbot-chatbot-python"
+version = "1.1.1"
+description = "Python SDK and Chatbot Framework for MAX API"
+readme = "README.md"
+authors = [{ name = "Green API" }]
+requires-python = ">=3.12"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "maxbot-api-client-python>=1.2.2",
+    "httpx>=0.24.0",
+    "aiofiles>=23.1.0",
+    "pydantic>=2.0.0",
+    "tenacity>=9.1.2"
+]
+
+[project.urls]
+Homepage = "https://github.com/green-api/maxbot-chatbot-python"
